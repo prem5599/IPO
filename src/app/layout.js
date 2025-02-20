@@ -1,4 +1,5 @@
 import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
 import './globals.css';
 import Navbar from '../components/Navbar/Navbar';
 import ErrorBoundary from '../components/ErrorBoundary/ErrorBoundary';
@@ -17,6 +18,25 @@ export const metadata = {
   },
 };
 
+// Loading component for Navbar
+function NavbarLoading() {
+  return (
+    <div className="sticky top-0 z-50 bg-white shadow-sm">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="text-2xl font-bold">
+          <span className="text-blue-600">IPO</span>
+          <span className="text-gray-800">Watch</span>
+        </div>
+        <div className="w-full max-w-xl mx-4">
+          <div className="relative">
+            <div className="w-full h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function RootLayout({ children }) {
   return (
     <html 
@@ -28,8 +48,12 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning={true}
       >
         <ErrorBoundary>
-          <Navbar />
-          {children}
+          <Suspense fallback={<NavbarLoading />}>
+            <Navbar />
+          </Suspense>
+          <Suspense fallback={<div className="p-4">Loading content...</div>}>
+            {children}
+          </Suspense>
         </ErrorBoundary>
       </body>
     </html>

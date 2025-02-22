@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TABS } from '../../lib/constants';
+import { TABS } from '../../../lib/constants';
 import IPOCard from '../IPOCard/IPOCard';
-import TabSection from '../TabSection/TabSection';
-import MarketStats from '../MarketStats/MarketStats';
-import BrokerCard from '../BrokerCard/BrokerCard';
+import TabSection from '../../TabSection/TabSection';
+import MarketStats from '../../MarketStats/MarketStats';
+import BrokerCard from '../../BrokerCard/BrokerCard';
 
 export default function IPOPlatform({ initialData }) {
   const [isMounted, setIsMounted] = useState(false);

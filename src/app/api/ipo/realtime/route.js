@@ -1,8 +1,7 @@
-// app/api/ipo/realtime/route.ts
 import { NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 
-export async function POST(request: Request) {
+export async function POST(request) {
   // Webhook endpoint for real-time updates
   try {
     // Validate incoming webhook (add security checks)

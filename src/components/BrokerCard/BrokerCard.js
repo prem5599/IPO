@@ -35,7 +35,7 @@ const BrokerCard = memo(() => {
               />
             </div>
             <div className="flex justify-between items-center flex-grow">
-              <span className="font-medium text-gray-900">upstox</span>
+              <span className="font-medium text-gray-900">Upstox</span>
               <div className="flex items-center bg-blue-100 px-2 py-1 rounded">
                 <span className="text-blue-600 font-medium">4.8</span>
                 <span className="text-blue-600 ml-1" aria-hidden="true">★</span>
@@ -55,10 +55,11 @@ const BrokerCard = memo(() => {
       
 
           <Link 
-            href="/open-account"
-            className="inline-block mt-3 text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium  text-sm px-5 py-2.5 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800 w-60"
+            href="/#"
+            className="inline-block mt-3 text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium  text-sm px-5 py-2.5 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800 "
             role="button"
             aria-label="Open trading account"
+            style={{display:'flex', justifyContent:'center'}}
           >
             Open Account
           </Link>

@@ -1,16 +1,14 @@
-// src/components/Navbar/Navbar.js
 'use client';
 
-import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import debounce from 'lodash/debounce';
+import { createSlug } from '../../lib/utils';
 
-// Separate the search functionality into its own component
-function SearchBar({ ipoData }) {
+const Navbar = ({ ipoData }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -18,14 +16,19 @@ function SearchBar({ ipoData }) {
   const searchRef = useRef(null);
 
   const companies = useMemo(() => {
+    if (!ipoData) return [];
+    
     const companySet = new Set();
-    Object.values(ipoData || {}).forEach(category => {
-      category?.forEach(ipo => {
-        if (ipo?.company_name) {
+    Object.values(ipoData).forEach(category => {
+      if (!Array.isArray(category)) return;
+      
+      category.forEach(ipo => {
+        if (ipo?.name) {
           companySet.add({
-            name: ipo.company_name,
+            name: ipo.name,
             symbol: ipo.symbol || '',
-            status: ipo.status || ''
+            status: ipo.status || '',
+            slug: createSlug(ipo.name)
           });
         }
       });
@@ -35,7 +38,7 @@ function SearchBar({ ipoData }) {
 
   const debouncedSearch = useMemo(
     () => debounce((query) => {
-      if (!query) {
+      if (!query.trim()) {
         setSuggestions([]);
         return;
       }
@@ -51,26 +54,10 @@ function SearchBar({ ipoData }) {
     [companies]
   );
 
-  const handleInputChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    debouncedSearch(query);
-    setShowSuggestions(true);
-  };
-
-  const handleSuggestionClick = (companyName) => {
-    setSearchQuery(companyName);
-    router.push(`/?search=${encodeURIComponent(companyName)}`);
-    setShowSuggestions(false);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/?search=${encodeURIComponent(searchQuery)}`);
-      setShowSuggestions(false);
-    }
-  };
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+    return () => debouncedSearch.cancel();
+  }, [searchQuery, debouncedSearch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -84,69 +71,94 @@ function SearchBar({ ipoData }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  return (
-    <div 
-      ref={searchRef} 
-      className={`relative w-full max-w-xl mx-4 ${isFocused ? 'z-50' : ''}`}
-    >
-      <form onSubmit={handleSubmit} className="w-full">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleInputChange}
-            onFocus={() => setIsFocused(true)}
-            placeholder="Search IPOs..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </form>
+  const handleInputChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowSuggestions(true);
+  };
 
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg mt-1">
-          {suggestions.map((company, index) => (
-            <div
-              key={index}
-              onClick={() => handleSuggestionClick(company.name)}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-            >
-              <span>{company.name}</span>
-              {company.symbol && (
-                <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                  {company.symbol}
-                </span>
-              )}
+  const handleSuggestionClick = (company) => {
+    router.push(`/ipo/${company.slug}`);
+    setSearchQuery('');
+    setShowSuggestions(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() && suggestions.length > 0) {
+      handleSuggestionClick(suggestions[0]);
+    }
+  };
+
+  return (
+    <nav className="sticky top-0 z-50 bg-white border-b border-black/[0.08] backdrop-blur">
+      <div className="max-w-[1400px] mx-auto px-6 py-3 md:px-4">
+        <div className="flex justify-between items-center gap-8">
+          <Link href="/" className="text-decoration-none">
+            <div className="text-2xl font-bold tracking-tight">
+              <span className="text-blue-600">IPO</span>
+              <span className="text-slate-800">Page</span>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+          </Link>
 
-// Main Navbar component
-export default function Navbar({ ipoData = {} }) {
-  return (
-    <nav className="sticky top-0 z-50 bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold">
-          <span className="text-blue-600">IPO</span>
-          <span className="text-gray-800">Watch</span>
-        </Link>
-
-        <Suspense fallback={
-          <div className="w-full max-w-xl mx-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <div className="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-100 animate-pulse">
+          <div 
+            className="relative flex-1 max-w-[600px] transition-all duration-200"
+            ref={searchRef}
+          >
+            <form onSubmit={handleSubmit} className="w-full">
+              <div className={`flex items-center bg-slate-50 border-2 ${
+                isFocused 
+                  ? 'border-blue-600 bg-white shadow-lg shadow-blue-600/10' 
+                  : 'border-blue-600/20'
+              } rounded-xl px-4 py-3 transition-all duration-200`}>
+                <Search size={20} className="text-slate-500 mr-3" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleInputChange}
+                  onFocus={() => setIsFocused(true)}
+                  placeholder="Search for IPOs..."
+                  className="w-full bg-transparent text-base text-slate-800 placeholder-slate-400 outline-none border-none focus:ring-0 focus:outline-none"
+                  aria-label="Search IPOs"
+                />
               </div>
-            </div>
+            </form>
+
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-xl shadow-xl border border-black/5 overflow-hidden animate-slideDown">
+                {suggestions.map((company, index) => (
+                  <div
+                    key={index}
+                    className="px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors duration-200"
+                    onClick={() => handleSuggestionClick(company)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium text-slate-800">
+                          {company.name}
+                        </span>
+                        {company.symbol && (
+                          <span className="text-sm text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                            {company.symbol}
+                          </span>
+                        )}
+                      </div>
+                      {company.status && (
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-medium">
+                          {company.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        }>
-          <SearchBar ipoData={ipoData} />
-        </Suspense>
+        </div>
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;

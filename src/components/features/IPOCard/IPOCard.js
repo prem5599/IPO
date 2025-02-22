@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { createSlug } from '../../lib/utils';
+import { createSlug } from '../../../lib/utils';
 
 const formatCurrency = (amount, defaultValue = 'N/A') => {
   if (!amount && amount !== 0) return defaultValue;
@@ -18,6 +18,21 @@ const formatPercentage = (value, defaultValue = 'N/A') => {
   if (!value && value !== 0) return defaultValue;
   const numValue = typeof value === 'string' ? parseFloat(value) : value;
   return isNaN(numValue) ? defaultValue : `${numValue.toFixed(2)}%`;
+};
+
+const formatDate = (dateString, defaultValue = 'TBA') => {
+  if (!dateString) return defaultValue;
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return defaultValue;
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).replace(/\//g, '/');
+  } catch (error) {
+    return defaultValue;
+  }
 };
 
 const STATUS_CONFIG = {
@@ -69,7 +84,10 @@ export default function IPOCard({ ipo, activeTab, isLoading = false }) {
       <div className={`grid ${gridCols} gap-3 mt-3`}>
         {activeTab === 'listed' ? (
           <>
-            <DetailBox label="Listing Date" value={ipo.listing_date} />
+            <DetailBox 
+              label="Listing Date" 
+              value={formatDate(ipo.listing_date)} 
+            />
             <DetailBox 
               label="Price Band" 
               value={`${formatCurrency(ipo.min_price)} - ${formatCurrency(ipo.max_price)}`} 
@@ -106,7 +124,7 @@ export default function IPOCard({ ipo, activeTab, isLoading = false }) {
             {ipo.listing_date && (
               <DetailBox 
                 label="Listing Date" 
-                value={ipo.listing_date} 
+                value={formatDate(ipo.listing_date)} 
               />
             )}
           </>
@@ -203,9 +221,9 @@ const BiddingDates = ({ ipo }) => (
   <div className="flex flex-wrap items-center text-gray-500 mb-3">
     <Clock className="mr-2" size={16} />
     <span className="text-sm">
-      <span className="inline-block">Opens: {ipo.bidding_start_date || 'TBA'}</span>
+      <span className="inline-block">Opens: {formatDate(ipo.bidding_start_date)}</span>
       <span className="mx-2">|</span>
-      <span className="inline-block">Closes: {ipo.bidding_end_date || 'TBA'}</span>
+      <span className="inline-block">Closes: {formatDate(ipo.bidding_end_date)}</span>
     </span>
   </div>
 );
@@ -220,4 +238,4 @@ const LoadingSkeleton = () => (
       ))}
     </div>
   </div>
-);
+);  
